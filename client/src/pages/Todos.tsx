@@ -8,6 +8,8 @@ import Input from '../components/Input';
 import Alert from '../components/Alert';
 import Loader from '../components/Loader';
 import ThemeToggle from '../components/ThemeToggle';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 const Todos: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -20,6 +22,7 @@ const Todos: React.FC = () => {
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const { token, logout } = useAuth();
     const navigate = useNavigate();
+    const { toasts, showToast, removeToast } = useToast();
 
     useEffect(() => {
         if (!token) {
@@ -37,6 +40,7 @@ const Todos: React.FC = () => {
             setTodos(data);
         } catch (e) {
             setError('Ошибка загрузки задач');
+            showToast('Ошибка загрузки задач', 'error');
         } finally {
             setLoading(false);
         }
@@ -45,15 +49,21 @@ const Todos: React.FC = () => {
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        if (!title.trim()) return setError('Заголовок обязателен');
+        if (!title.trim()) {
+            setError('Заголовок обязателен');
+            showToast('Заголовок обязателен', 'error');
+            return;
+        }
         setCreating(true);
         try {
             await createTodo({ title, description });
             setTitle('');
             setDescription('');
             fetchTodos();
+            showToast('Задача добавлена', 'success');
         } catch (e) {
             setError('Ошибка создания задачи');
+            showToast('Ошибка создания задачи', 'error');
         } finally {
             setCreating(false);
         }
@@ -64,8 +74,10 @@ const Todos: React.FC = () => {
         try {
             await updateTodo(todo._id, { completed: !todo.completed });
             fetchTodos();
+            showToast('Статус задачи обновлён', 'success');
         } catch (e) {
             setError('Ошибка обновления');
+            showToast('Ошибка обновления', 'error');
         } finally {
             setUpdatingId(null);
         }
@@ -76,8 +88,10 @@ const Todos: React.FC = () => {
         try {
             await deleteTodo(id);
             fetchTodos();
+            showToast('Задача удалена', 'success');
         } catch (e) {
             setError('Ошибка удаления');
+            showToast('Ошибка удаления', 'error');
         } finally {
             setDeletingId(null);
         }
@@ -85,6 +99,14 @@ const Todos: React.FC = () => {
 
     return (
         <div className='min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors p-4'>
+            {toasts.map((t) => (
+                <Toast
+                    key={t.id}
+                    message={t.message}
+                    type={t.type}
+                    onClose={() => removeToast(t.id)}
+                />
+            ))}
             <div
                 className='max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mt-8 animate-fade-in'
                 style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.10)' }}
