@@ -13,7 +13,7 @@ exports.register = async (req, res, next) => {
                 .json({ error: 'Пользователь уже существует' });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({ email, password: hashedPassword });
+        await User.create({ email, password: hashedPassword });
         res.status(201).json({ message: 'Регистрация успешна' });
     } catch (err) {
         next(err);
