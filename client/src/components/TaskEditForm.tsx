@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Button from './Button';
 import Input from './Input';
+import { useFormField } from '../hooks/useFormField';
 
 interface TaskEditFormProps {
     initialTitle: string;
@@ -10,6 +11,9 @@ interface TaskEditFormProps {
     loading?: boolean;
 }
 
+const titleValidator = (v: string) =>
+    !v.trim() ? 'Заголовок обязателен' : null;
+
 const TaskEditForm: React.FC<TaskEditFormProps> = ({
     initialTitle,
     initialDescription = '',
@@ -17,18 +21,17 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
     onCancel,
     loading,
 }) => {
-    const [title, setTitle] = useState(initialTitle);
-    const [description, setDescription] = useState(initialDescription);
-    const [error, setError] = useState('');
+    const title = useFormField(initialTitle, [titleValidator]);
+    const description = useFormField(initialDescription);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title.trim()) {
-            setError('Заголовок обязателен');
+        const err = title.validate();
+        if (err) {
+            title.setTouched(true);
             return;
         }
-        setError('');
-        onSave(title.trim(), description.trim());
+        onSave(title.value.trim(), description.value.trim());
     };
 
     return (
@@ -36,18 +39,29 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
             onSubmit={handleSubmit}
             className='flex flex-col md:flex-row gap-2 w-full'
         >
+            <div className='flex-1'>
+                <Input
+                    type='text'
+                    value={title.value}
+                    onChange={title.onChange}
+                    onBlur={title.onBlur}
+                    className={
+                        title.touched && title.error ? 'border-red-500' : ''
+                    }
+                    placeholder='Заголовок'
+                    autoFocus
+                />
+                {title.touched && title.error && (
+                    <div className='text-red-500 text-xs mt-1'>
+                        {title.error}
+                    </div>
+                )}
+            </div>
             <Input
                 type='text'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className='flex-1'
-                placeholder='Заголовок'
-                autoFocus
-            />
-            <Input
-                type='text'
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={description.value}
+                onChange={description.onChange}
+                onBlur={description.onBlur}
                 className='flex-1'
                 placeholder='Описание'
             />
@@ -65,9 +79,6 @@ const TaskEditForm: React.FC<TaskEditFormProps> = ({
             >
                 Отмена
             </Button>
-            {error && (
-                <div className='text-red-500 text-xs mt-1 w-full'>{error}</div>
-            )}
         </form>
     );
 };
