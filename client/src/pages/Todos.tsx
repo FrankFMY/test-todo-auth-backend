@@ -10,6 +10,7 @@ import Loader from '../components/Loader';
 import ThemeToggle from '../components/ThemeToggle';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
+import TaskEditForm from '../components/TaskEditForm';
 
 const Todos: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -20,6 +21,9 @@ const Todos: React.FC = () => {
     const [creating, setCreating] = useState(false);
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editLoading, setEditLoading] = useState(false);
+    const [editError, setEditError] = useState('');
     const { token, logout } = useAuth();
     const navigate = useNavigate();
     const { toasts, showToast, removeToast } = useToast();
@@ -97,6 +101,26 @@ const Todos: React.FC = () => {
         }
     };
 
+    const handleEditSave = async (
+        id: string,
+        title: string,
+        description: string
+    ) => {
+        setEditLoading(true);
+        setEditError('');
+        try {
+            await updateTodo(id, { title, description });
+            setEditingId(null);
+            fetchTodos();
+            showToast('Задача обновлена', 'success');
+        } catch (e) {
+            setEditError('Ошибка обновления');
+            showToast('Ошибка обновления', 'error');
+        } finally {
+            setEditLoading(false);
+        }
+    };
+
     return (
         <div className='min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors p-4'>
             {toasts.map((t) => (
@@ -166,61 +190,101 @@ const Todos: React.FC = () => {
                                     todo.completed ? 'opacity-60' : ''
                                 }`}
                             >
-                                <div className='flex items-center gap-3'>
-                                    <button
-                                        type='button'
-                                        onClick={() => handleToggle(todo)}
-                                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                            todo.completed
-                                                ? 'bg-blue-500 border-blue-500'
-                                                : 'border-gray-400 dark:border-gray-500'
-                                        } focus:outline-none focus:ring-2 focus:ring-blue-400`}
-                                        aria-label='Выполнено'
-                                        disabled={!!updatingId}
-                                    >
-                                        {updatingId === todo._id ? (
-                                            <Loader className='w-4 h-4 border-2' />
-                                        ) : todo.completed ? (
-                                            <svg
-                                                className='w-4 h-4 text-white'
-                                                fill='none'
-                                                stroke='currentColor'
-                                                strokeWidth='3'
-                                                viewBox='0 0 24 24'
+                                {editingId === todo._id ? (
+                                    <TaskEditForm
+                                        initialTitle={todo.title}
+                                        initialDescription={todo.description}
+                                        onSave={(title, description) =>
+                                            handleEditSave(
+                                                todo._id,
+                                                title,
+                                                description
+                                            )
+                                        }
+                                        onCancel={() => setEditingId(null)}
+                                        loading={editLoading}
+                                    />
+                                ) : (
+                                    <>
+                                        <div className='flex items-center gap-3'>
+                                            <button
+                                                type='button'
+                                                onClick={() =>
+                                                    handleToggle(todo)
+                                                }
+                                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                                    todo.completed
+                                                        ? 'bg-blue-500 border-blue-500'
+                                                        : 'border-gray-400 dark:border-gray-500'
+                                                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                                                aria-label='Выполнено'
+                                                disabled={!!updatingId}
                                             >
-                                                <path
-                                                    strokeLinecap='round'
-                                                    strokeLinejoin='round'
-                                                    d='M5 13l4 4L19 7'
-                                                />
-                                            </svg>
-                                        ) : null}
-                                    </button>
-                                    <div>
-                                        <span
-                                            className={`font-semibold text-lg ${
-                                                todo.completed
-                                                    ? 'line-through text-gray-400 dark:text-gray-500'
-                                                    : 'text-gray-900 dark:text-white'
-                                            }`}
-                                        >
-                                            {todo.title}
-                                        </span>
-                                        {todo.description && (
-                                            <div className='text-xs text-gray-500 dark:text-gray-300 mt-1'>
-                                                {todo.description}
+                                                {updatingId === todo._id ? (
+                                                    <Loader className='w-4 h-4 border-2' />
+                                                ) : todo.completed ? (
+                                                    <svg
+                                                        className='w-4 h-4 text-white'
+                                                        fill='none'
+                                                        stroke='currentColor'
+                                                        strokeWidth='3'
+                                                        viewBox='0 0 24 24'
+                                                    >
+                                                        <path
+                                                            strokeLinecap='round'
+                                                            strokeLinejoin='round'
+                                                            d='M5 13l4 4L19 7'
+                                                        />
+                                                    </svg>
+                                                ) : null}
+                                            </button>
+                                            <div>
+                                                <span
+                                                    className={`font-semibold text-lg ${
+                                                        todo.completed
+                                                            ? 'line-through text-gray-400 dark:text-gray-500'
+                                                            : 'text-gray-900 dark:text-white'
+                                                    }`}
+                                                >
+                                                    {todo.title}
+                                                </span>
+                                                {todo.description && (
+                                                    <div className='text-xs text-gray-500 dark:text-gray-300 mt-1'>
+                                                        {todo.description}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
+                                        </div>
+                                        <div className='flex gap-2'>
+                                            <Button
+                                                type='button'
+                                                onClick={() =>
+                                                    setEditingId(todo._id)
+                                                }
+                                                className='text-xs bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 px-3 py-1'
+                                            >
+                                                Редактировать
+                                            </Button>
+                                            <Button
+                                                type='button'
+                                                onClick={() =>
+                                                    handleDelete(todo._id)
+                                                }
+                                                loading={
+                                                    deletingId === todo._id
+                                                }
+                                                className='text-xs bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 px-3 py-1'
+                                            >
+                                                Удалить
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
+                                {editingId === todo._id && editError && (
+                                    <div className='text-red-500 text-xs mt-1'>
+                                        {editError}
                                     </div>
-                                </div>
-                                <Button
-                                    type='button'
-                                    onClick={() => handleDelete(todo._id)}
-                                    loading={deletingId === todo._id}
-                                    className='text-xs bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 px-3 py-1'
-                                >
-                                    Удалить
-                                </Button>
+                                )}
                             </li>
                         ))}
                     </ul>
