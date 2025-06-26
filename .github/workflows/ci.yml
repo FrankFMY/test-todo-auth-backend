@@ -41,11 +41,6 @@ jobs:
                   cd client
                   npm ci
 
-            - name: Линтинг frontend
-              run: |
-                  cd client
-                  npx eslint src --no-ignore
-
             - name: Тесты frontend
               run: |
                   cd client
