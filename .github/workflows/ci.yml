@@ -1,0 +1,38 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    build-and-test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Установка Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18'
+
+            - name: Установка зависимостей backend
+              run: npm install
+
+            - name: Запуск тестов backend
+              run: npm test
+
+            - name: Установка зависимостей frontend
+              run: |
+                  cd client
+                  npm install
+
+            - name: Проверка сборки frontend
+              run: |
+                  cd client
+                  npm run build
+
+            - name: Проверка структуры проекта
+              run: |
+                  test -d client && test -f app.js && test -f README.md && test -f .gitignore && echo "Структура в порядке"
