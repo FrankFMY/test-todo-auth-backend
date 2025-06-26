@@ -26,12 +26,17 @@ jobs:
               run: npm install
 
             - name: Запуск тестов backend
-              run: npm test
+              run: npm test -- tests/
 
             - name: Установка зависимостей frontend
               run: |
                   cd client
                   npm install
+
+            - name: Запуск тестов frontend
+              run: |
+                  cd client
+                  npm test -- --watchAll=false
 
             - name: Проверка сборки frontend
               run: |
