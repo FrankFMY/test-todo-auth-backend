@@ -44,7 +44,7 @@ jobs:
             - name: Линтинг frontend
               run: |
                   cd client
-                  npm run lint
+                  npx eslint src --no-ignore
 
             - name: Тесты frontend
               run: |
