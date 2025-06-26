@@ -1,13 +1,12 @@
 module.exports = {
-  content: [
-    './src/**/*.{js,jsx,ts,tsx}',
-  ],
-  darkMode: false, // or 'media' or 'class'
-  theme: {
-    extend: {},
-  },
-  variants: {
-    extend: {},
-  },
-  plugins: [],
+    content: ['./src/**/*.{js,jsx,ts,tsx}'],
+    darkMode: 'class', // включена поддержка темной темы через класс
+    theme: {
+        extend: {},
+    },
+    variants: {
+        extend: {},
+    },
+    plugins: [],
 };
+

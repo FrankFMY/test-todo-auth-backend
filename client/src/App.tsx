@@ -7,24 +7,26 @@ import Todos from './pages/Todos';
 const App: React.FC = () => {
     return (
         <BrowserRouter>
-            <Routes>
-                <Route
-                    path='/login'
-                    element={<Login />}
-                />
-                <Route
-                    path='/register'
-                    element={<Register />}
-                />
-                <Route
-                    path='/todos'
-                    element={<Todos />}
-                />
-                <Route
-                    path='*'
-                    element={<Navigate to='/todos' />}
-                />
-            </Routes>
+            <main>
+                <Routes>
+                    <Route
+                        path='/login'
+                        element={<Login />}
+                    />
+                    <Route
+                        path='/register'
+                        element={<Register />}
+                    />
+                    <Route
+                        path='/todos'
+                        element={<Todos />}
+                    />
+                    <Route
+                        path='*'
+                        element={<Navigate to='/todos' />}
+                    />
+                </Routes>
+            </main>
         </BrowserRouter>
     );
 };
