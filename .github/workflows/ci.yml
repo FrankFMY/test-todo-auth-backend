@@ -14,11 +14,6 @@ jobs:
                 image: mongo:5.0
                 ports:
                     - 27017:27017
-                options: >-
-                    --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'" \
-                    --health-interval=10s \
-                    --health-timeout=5s \
-                    --health-retries=5
         steps:
             - uses: actions/checkout@v3
 
